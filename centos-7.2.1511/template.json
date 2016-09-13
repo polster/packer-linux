@@ -1,0 +1,112 @@
+{
+  "variables": {
+    "headless": false,
+    "setup_user": "vagrant",
+    "setup_user_password": "vagrant",
+    "vm_name": "centos-7.2.1511",
+    "iso_url": "http://linuxsoft.cern.ch/centos/7.2.1511/isos/x86_64/CentOS-7-x86_64-Minimal-1511.iso",
+    "iso_path": "iso/CentOS-7-x86_64-Minimal-1511.iso",
+    "iso_checksum": "f90e4d28fa377669b2db16cbcb451fcb9a89d2460e3645993e30e137ac37d284",
+    "iso_checksum_type": "sha256",
+    "disk_size": 20000
+  },
+  "provisioners": [
+    {
+      "type": "shell",
+      "execute_command": "echo '{{user `setup_user`}}' | {{.Vars}} sudo -S -E bash '{{.Path}}'",
+      "override": {
+        "virtualbox-iso": {
+          "scripts": [
+            "../centos/scripts/repo-setup.sh",
+            "../centos/scripts/virtualbox-guest-tools.sh",
+            "../centos/scripts/cleanup.sh"
+          ]
+        },
+        "vmware-iso": {
+          "scripts": [
+            "../centos/scripts/repo-setup.sh",
+            "../centos/scripts/vmware-guest-tools.sh",
+            "../centos/scripts/cleanup.sh"
+          ]
+        }
+      }
+    }
+  ],
+  "builders": [
+    {
+      "type": "virtualbox-iso",
+      "boot_command": [
+        "<tab> text ks=http://{{ .HTTPIP }}:{{ .HTTPPort }}/ks.cfg<enter>"
+      ],
+      "boot_wait": "10s",
+      "disk_size": "{{user `disk_size`}}",
+      "guest_os_type": "Ubuntu_64",
+      "headless": "{{user `headless`}}",
+      "http_directory": ".",
+      "iso_urls": [
+        "{{user `iso_path`}}",
+        "{{iso_url}}"
+      ],
+      "iso_checksum_type": "{{user `iso_checksum_type`}}",
+      "iso_checksum": "{{user `iso_checksum`}}",
+      "ssh_username": "{{user `setup_user`}}",
+      "ssh_password": "{{user `setup_user_password`}}",
+      "ssh_port": 22,
+      "ssh_wait_timeout": "10000s",
+      "shutdown_command": "echo '{{user `setup_user`}}'|sudo -S shutdown -P now",
+      "guest_additions_path": "VBoxGuestAdditions_{{.Version}}.iso",
+      "virtualbox_version_file": ".vbox_version",
+      "vm_name": "{{user `vm_name`}}",
+      "vboxmanage": [
+        [
+          "modifyvm",
+          "{{.Name}}",
+          "--memory",
+          "1024"
+        ],
+        [
+          "modifyvm",
+          "{{.Name}}",
+          "--cpus",
+          "2"
+        ]
+      ]
+    },
+    {
+      "type": "vmware-iso",
+      "boot_command": [
+        "<tab> text ks=http://{{ .HTTPIP }}:{{ .HTTPPort }}/ks.cfg<enter>"
+      ],
+      "boot_wait": "10s",
+      "disk_size": "{{user `disk_size`}}",
+      "guest_os_type": "ubuntu-64",
+      "headless": "{{user `headless`}}",
+      "http_directory": ".",
+      "iso_urls": [
+        "{{user `iso_path`}}",
+        "{{user `iso_url`}}"
+      ],
+      "iso_checksum_type": "{{user `iso_checksum_type`}}",
+      "iso_checksum": "{{user `iso_checksum`}}",
+      "output_directory": "{{user `vm_name`}}-vmware",
+      "shutdown_command": "echo '{{user `setup_user`}}'|sudo -S shutdown -P now",
+      "ssh_password": "{{user `setup_user_password`}}",
+      "ssh_port": 22,
+      "ssh_username": "{{user `setup_user`}}",
+      "ssh_wait_timeout": "10000s",
+      "tools_upload_flavor": "linux",
+      "vm_name": "{{user `vm_name`}}",
+      "vmx_data": {
+        "cpuid.coresPerSocket": "1",
+        "memsize": "1024",
+        "numvcpus": "2"
+      }
+    }
+  ],
+  "post-processors": [
+    {
+      "output": "{{user `vm_name`}}-{{.Provider}}.box",
+      "type": "vagrant"
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+VAGRANTFILE_API_VERSION = "2"
+
+Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
+  config.vm.box = "#{File.basename(Dir.pwd)}"
+
+  config.vm.provider :virtualbox do |v, override|
+   #override.vm.synced_folder ".", "/vagrant", disabled: true
+   #v.gui = true
+  end
+
+  config.vm.provider :vmware_workstation do |v, override|
+   #override.vm.synced_folder ".", "/vagrant", disabled: true
+   #v.gui = true
+  end
+end
